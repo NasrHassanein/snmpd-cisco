@@ -1,0 +1,34 @@
+###############################################################################
+# docker-compose.yml — Cisco SNMP Simulator
+#
+# Spin up one or more fake Cisco routers, each on its own UDP port.
+#
+# Usage:
+#   docker compose up -d
+#   snmpget -v2c -c public localhost:10161 sysDescr.0
+#   snmpwalk -v2c -c public localhost:10161 .1.3.6.1.4.1.9
+#
+# Scale to N instances (ports 10161..1016N):
+#   Duplicate the service block and change the host port.
+###############################################################################
+
+services:
+  cisco-router-01:
+    build: .
+    container_name: cisco-router-01
+    hostname: router-gw-01
+    ports:
+      - "10161:161/udp"
+    restart: unless-stopped
+
+  # ── Example: second router on a different port ──
+  # cisco-router-02:
+  #   build: .
+  #   container_name: cisco-router-02
+  #   hostname: router-gw-02
+  #   ports:
+  #     - "10162:161/udp"
+  #   # Override identity via env or a second snmpd.conf volume mount:
+  #   # volumes:
+  #   #   - ./snmpd-router02.conf:/etc/snmp/snmpd.conf:ro
+  #   restart: unless-stopped
