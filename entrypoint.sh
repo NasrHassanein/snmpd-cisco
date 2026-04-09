@@ -11,10 +11,14 @@ echo "  SNMPv3 pass : 1234567890abcdef"
 echo "========================================="
 
 # ─── Create SNMPv3 users (MIMIC Viewer defaults) ─────────────────────────────
-# Net-SNMP processes createUser at startup, hashes the credentials, then
-# replaces the createUser lines with usmUser entries in the persistent store.
+# createUser directives must be in the file snmpd actually reads (-c flag).
+# snmpd processes them at startup, hashes the passwords, and writes usmUser
+# entries to the persistent store (/var/lib/snmp). The directory must exist
+# and be writable before snmpd starts.
 mkdir -p /var/lib/snmp
-cat > /var/lib/snmp/snmpd.conf <<'EOF'
+cat >> /etc/snmp/snmpd.conf <<'EOF'
+
+# ─── SNMPv3 createUser (appended by entrypoint) ──────────────────────────────
 # SNMPv3 users — MIMIC Viewer defaults (password: 1234567890abcdef)
 
 # Users without context names
