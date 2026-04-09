@@ -13,10 +13,19 @@
 # Run:
 #   docker run -d --name cisco-router -p 10161:161/udp cisco-snmp-sim
 #
-# Test:
+# Test (SNMPv1/v2c):
 #   snmpget  -v2c -c public localhost:10161 sysDescr.0
 #   snmpwalk -v2c -c public localhost:10161 .1.3.6.1.4.1.9.9.13
 #   snmpwalk -v2c -c public localhost:10161 .1.3.6.1.2.1.47
+#
+# Test (SNMPv3 — password: 1234567890abcdef):
+#   snmpget  -v3 -u user1 -l noAuthNoPriv localhost:10161 sysDescr.0
+#   snmpget  -v3 -u user2 -l authNoPriv  -a MD5 -A 1234567890abcdef localhost:10161 sysDescr.0
+#   snmpget  -v3 -u user3 -l authNoPriv  -a SHA -A 1234567890abcdef localhost:10161 sysDescr.0
+#   snmpget  -v3 -u user4 -l authPriv    -a MD5 -A 1234567890abcdef -x DES -X 1234567890abcdef localhost:10161 sysDescr.0
+#   snmpget  -v3 -u user6 -l authPriv    -a MD5 -A 1234567890abcdef -x AES -X 1234567890abcdef localhost:10161 sysDescr.0
+#   snmpget  -v3 -u user7 -l authPriv    -a SHA -A 1234567890abcdef -x AES -X 1234567890abcdef localhost:10161 sysDescr.0
+#   snmpget  -v3 -u user14 -l authPriv   -a MD5 -A 1234567890abcdef -x DES -X 1234567890abcdef -n context14 localhost:10161 sysDescr.0
 ###############################################################################
 
 FROM ubuntu:24.04
