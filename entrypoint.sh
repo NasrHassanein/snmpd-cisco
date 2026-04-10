@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 echo "=== Cisco SNMP Simulator (ISR 4331) ==="
