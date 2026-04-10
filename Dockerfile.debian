@@ -1,0 +1,73 @@
+###############################################################################
+# Dockerfile.debian — Cisco IOS SNMP Simulator (Debian Bookworm Slim)
+#
+# Builds a container running Net-SNMP's snmpd configured to impersonate
+# a Cisco ISR 4331 router (IOS XE 16.6.2).
+#
+# Uses MIBs from https://github.com/cisco/cisco-mibs and a pass_persist
+# Python script to serve Cisco-proprietary OID subtrees.
+#
+# Build:
+#   docker build -t cisco-snmp-sim-debian -f Dockerfile.debian .
+#
+# Run:
+#   docker run -d --name cisco-router-debian -p 10161:161/udp cisco-snmp-sim-debian
+#
+# Test (SNMPv1/v2c):
+#   snmpget  -v2c -c public localhost:10161 sysDescr.0
+#   snmpwalk -v2c -c public localhost:10161 .1.3.6.1.4.1.9.9.13
+#   snmpwalk -v2c -c public localhost:10161 .1.3.6.1.2.1.47
+#
+# Test (SNMPv3 — password: 1234567890abcdef):
+#   snmpget  -v3 -u user1 -l noAuthNoPriv localhost:10161 sysDescr.0
+#   snmpget  -v3 -u user2 -l authNoPriv  -a MD5 -A 1234567890abcdef localhost:10161 sysDescr.0
+#   snmpget  -v3 -u user3 -l authNoPriv  -a SHA -A 1234567890abcdef localhost:10161 sysDescr.0
+#   snmpget  -v3 -u user4 -l authPriv    -a MD5 -A 1234567890abcdef -x DES -X 1234567890abcdef localhost:10161 sysDescr.0
+#   snmpget  -v3 -u user6 -l authPriv    -a MD5 -A 1234567890abcdef -x AES -X 1234567890abcdef localhost:10161 sysDescr.0
+#   snmpget  -v3 -u user7 -l authPriv    -a SHA -A 1234567890abcdef -x AES -X 1234567890abcdef localhost:10161 sysDescr.0
+#   snmpget  -v3 -u user14 -l authPriv   -a MD5 -A 1234567890abcdef -x DES -X 1234567890abcdef -n context14 localhost:10161 sysDescr.0
+###############################################################################
+
+FROM debian:bookworm-slim
+
+LABEL maintainer="snmp-sim"
+LABEL description="Cisco IOS SNMP simulator (Debian Bookworm) using Net-SNMP + cisco/cisco-mibs"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# ─── 1. Install packages ────────────────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        snmpd \
+        snmp \
+        snmp-mibs-downloader \
+        python3 \
+        git \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download standard IETF/IANA MIBs
+RUN download-mibs 2>/dev/null || true
+
+# ─── 2. Clone Cisco MIBs and install them ───────────────────────────────────
+RUN git clone --depth 1 https://github.com/cisco/cisco-mibs.git /tmp/cisco-mibs \
+    && mkdir -p /usr/share/snmp/mibs/cisco \
+    && cp /tmp/cisco-mibs/v2/*.my /usr/share/snmp/mibs/cisco/ \
+    && rm -rf /tmp/cisco-mibs
+
+# ─── 3. Client-side MIB config (enables MIB name resolution) ────────────────
+COPY snmp.conf /etc/snmp/snmp.conf
+
+# ─── 4. snmpd configuration with Cisco identity overrides ───────────────────
+COPY snmpd.conf /etc/snmp/snmpd.conf
+
+# ─── 5. pass_persist agent script ───────────────────────────────────────────
+COPY cisco_fake_agent.py /usr/local/bin/cisco_fake_agent.py
+RUN chmod +x /usr/local/bin/cisco_fake_agent.py
+
+# ─── 6. Entrypoint ─────────────────────────────────────────────────────────
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 161/udp
+
+CMD ["/entrypoint.sh"]
