@@ -38,5 +38,7 @@ createUser user14 MD5 1234567890abcdef DES 1234567890abcdef
 createUser user15 SHA 1234567890abcdef DES 1234567890abcdef
 EOF
 
-# Start snmpd in foreground, log to stderr
-exec /usr/sbin/snmpd -f -Lo -C -c /etc/snmp/snmpd.conf
+# Start snmpd in foreground, log to stderr.
+# SNMPD_EXTRA_FLAGS can be set in the Dockerfile (e.g. "-I -systemstats" for Alpine).
+# shellcheck disable=SC2086
+exec /usr/sbin/snmpd -f -Lo -C -c /etc/snmp/snmpd.conf ${SNMPD_EXTRA_FLAGS:-}

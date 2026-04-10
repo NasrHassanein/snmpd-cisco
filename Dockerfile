@@ -30,7 +30,7 @@
 
 FROM ubuntu:24.04
 
-LABEL maintainer="snmp-sim"
+LABEL maintainer="NasrHassanein"
 LABEL description="Cisco IOS SNMP simulator using Net-SNMP + cisco/cisco-mibs"
 
 ENV DEBIAN_FRONTEND=noninteractive

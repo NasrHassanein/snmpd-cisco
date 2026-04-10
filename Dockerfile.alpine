@@ -30,8 +30,12 @@
 
 FROM alpine:3.23.3
 
-LABEL maintainer="snmp-sim"
+LABEL maintainer="NasrHassanein"
 LABEL description="Cisco IOS SNMP simulator (Alpine) using Net-SNMP + cisco/cisco-mibs"
+
+# Disable the systemstats module on Alpine: musl libc exposes more fields in
+# /proc/net/snmp than Net-SNMP expects, producing a harmless but noisy warning.
+ENV SNMPD_EXTRA_FLAGS="-I -systemstats"
 
 # ─── 1. Install packages ────────────────────────────────────────────────────
 # net-snmp       : snmpd daemon + standard MIBs

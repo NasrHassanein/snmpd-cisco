@@ -30,7 +30,7 @@
 
 FROM debian:bookworm-slim
 
-LABEL maintainer="snmp-sim"
+LABEL maintainer="NasrHassanein"
 LABEL description="Cisco IOS SNMP simulator (Debian Bookworm) using Net-SNMP + cisco/cisco-mibs"
 
 ENV DEBIAN_FRONTEND=noninteractive
