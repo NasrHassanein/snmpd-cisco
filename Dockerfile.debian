@@ -36,7 +36,10 @@ LABEL description="Cisco IOS SNMP simulator (Debian Bookworm) using Net-SNMP + c
 ENV DEBIAN_FRONTEND=noninteractive
 
 # ─── 1. Install packages ────────────────────────────────────────────────────
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# snmp-mibs-downloader lives in the non-free component — enable it first.
+RUN sed -i 's/Components: main/Components: main non-free non-free-firmware/' \
+        /etc/apt/sources.list.d/debian.sources \
+    && apt-get update && apt-get install -y --no-install-recommends \
         snmpd \
         snmp \
         snmp-mibs-downloader \
